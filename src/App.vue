@@ -1,30 +1,100 @@
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
-  <router-view/>
+  <div>
+    <router-view class="router-view" v-slot="{ Component }">
+      <transition :name="transitionName">
+        <component :is="Component" />
+      </transition>
+    </router-view>
+  </div>
 </template>
 
+<script>
+import { useRouter } from 'vue-router'
+import { defineComponent, reactive, toRefs } from 'vue'
+export default defineComponent({
+  setup() {
+    const router = useRouter()
+    const state = reactive({
+      transitionName: 'slide-left'
+    })
+    router.beforeEach((to, from) => {
+      if (to.meta.index > from.meta.index) {
+        // 主到次，向左滑
+        state.transitionName = 'slide-left'
+      } else if (to.meta.index < from.meta.index) {
+        // 次到主，向右滑
+        state.transitionName = 'slide-right'
+      } else {
+        // 同级，无滑动效果
+        state.transitionName = ''
+      }
+    })
+    return {
+      ...toRefs(state)
+    }
+  }
+})
+</script>
+
 <style lang="less">
+html,
+body {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  height: 100%;
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
+  // text-align: center;
   color: #2c3e50;
 }
 
-nav {
-  padding: 30px;
+.router-view {
+  width: 100%;
+  height: auto;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin: 0 auto;
+  -webkit-overflow-scrolling: touch;
+}
 
-  a {
-    font-weight: bold;
-    color: #2c3e50;
+.slide-right-enter-active,
+.slide-right-leave-active,
+.slide-left-enter-active,
+.slide-left-leave-active {
+  height: 100%;
+  will-change: transform;
+  transition: all 500ms;
+  position: absolute;
+  backface-visibility: hidden;
+}
 
-    &.router-link-exact-active {
-      color: #42b983;
-    }
-  }
+.slide-right-enter {
+  opacity: 0;
+  transform: translate3d(-100%, 0, 0);
+}
+
+.slide-right-leave-active {
+  opacity: 0;
+  transform: translate3d(100%, 0, 0);
+}
+
+.slide-left-enter {
+  opacity: 0;
+  transform: translate3d(100%, 0, 0);
+}
+
+.slide-left-leave-active {
+  opacity: 0;
+  transform: translate3d(-100%, 0, 0);
+}
+
+.van-badge--fixed {
+  z-index: 1000;
 }
 </style>
